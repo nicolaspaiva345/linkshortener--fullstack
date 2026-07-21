@@ -30,13 +30,14 @@ class ShortUrlServiceTest {
     @Test
     void deveCriarShortUrlComSucesso() {
         String urlOriginal = "https://github.com";
+        String customCode = "meu-link";
+
         when(repository.save(any(ShortUrl.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ShortUrl resultado = service.shortenUrl(urlOriginal);
+        ShortUrl resultado = service.shortenUrl(urlOriginal, customCode);
 
         assertNotNull(resultado);
         assertEquals(urlOriginal, resultado.getOriginalUrl());
-        assertEquals(7, resultado.getShortCode().length()); // Garante que o NanoID tem 7 caracteres
         verify(repository, times(1)).save(any(ShortUrl.class));
     }
 
