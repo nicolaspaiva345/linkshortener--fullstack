@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Link2, Copy, Check, BarChart3, Trash2, Globe, ArrowRight, Sparkles, QrCode, Download, Smartphone, Laptop, Edit3, ExternalLink, ShieldCheck } from 'lucide-react';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api',
+  baseURL: import.meta.env.VITE_API_URL,
 });
 
 interface SavedUrl {
