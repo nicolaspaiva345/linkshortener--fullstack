@@ -18,7 +18,6 @@ import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/urls")
-// Adicionado os métodos explícitos no CORS para garantir que o DELETE e OPTIONS passem
 @CrossOrigin(origins = "http://localhost:5173", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.DELETE, RequestMethod.OPTIONS})
 public class ShortUrlController {
 
