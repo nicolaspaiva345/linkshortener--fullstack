@@ -13,8 +13,7 @@ Aplicação Fullstack moderna desenvolvida para encurtamento de URLs, geração 
 
 ## 🚀 Aplicação em Produção
 
-- 🌐 **Frontend (Vercel):** [https://seu-projeto.vercel.app](https://seu-projeto.vercel.app) *(Substitua com seu link)*
-- ⚙️ **Backend API (Render):** `https://seu-backend.onrender.com/api` *(Substitua com seu link)*
+- 🌐 Link do deploy: https://link-shortener-d5ht.onrender.com/
 
 ---
 
@@ -69,10 +68,3 @@ Aplicação Fullstack moderna desenvolvida para encurtamento de URLs, geração 
 - Instância do **PostgreSQL** ativa (local ou Supabase)
 
 ---
-
-### 1️⃣ Backend (Spring Boot)
-
-1. Clone o repositório:
-   ```bash
-   git clone [https://github.com/SEU_USUARIO/linkshortener.git](https://github.com/SEU_USUARIO/linkshortener.git)
-   cd linkshortener/backend
