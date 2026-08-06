@@ -1,4 +1,4 @@
-# 🔗 LinkShortener — Encurtador de URLs e Analytics High-Performance
+# 🔗 LinkShortener — Encurtador de URLs
 
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot_3.x-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
 ![React](https://img.shields.io/badge/React_18-61DAFB?style=for-the-badge&logo=react&logoColor=black)
