@@ -1,6 +1,9 @@
-import React, { useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Link2, Copy, Check, BarChart3, Trash2, Globe, ArrowRight, Sparkles, QrCode, Download, Smartphone, Laptop, Edit3, ExternalLink, ShieldCheck } from 'lucide-react';
+import { 
+  Link2, Copy, Check, BarChart3, Trash2, Globe, ArrowRight, 
+  Sparkles, QrCode, Download, Smartphone, Laptop, Edit3, ExternalLink, ShieldCheck 
+} from 'lucide-react';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
@@ -27,7 +30,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
-  
+
   const customDomain = "nico.sh";
 
   const [showQrModal, setShowQrModal] = useState(false);
@@ -43,19 +46,19 @@ export default function App() {
   const [stats, setStats] = useState<AnalyticsData | null>(null);
   const [loadingStats, setLoadingStats] = useState(false);
 
-useEffect(() => {
+  useEffect(() => {
     const path = window.location.pathname;
-    
+
     if (path && path !== '/' && path !== '/favicon.ico' && !path.includes('.')) {
-      const code = path.substring(1); 
-      
+      const code = path.substring(1);
+
       setIsRedirecting(true);
       console.log(`[Redirecionador] Iniciando busca pelo código: ${code}`);
-      
+
       const realizarRedirecionamento = async () => {
         try {
           const response = await api.get(`/urls/${code}`);
-          
+
           let urlDestino = "";
           if (response.data) {
             if (typeof response.data === 'string') {
@@ -78,9 +81,8 @@ useEffect(() => {
 
       const timer = setTimeout(() => {
         realizarRedirecionamento();
-      }, 1200); 
+      }, 1200);
 
-      // Cancela o timer se o React desmontar o componente antes de 1.2s
       return () => clearTimeout(timer);
     }
   }, []);
@@ -104,7 +106,7 @@ useEffect(() => {
 
     const formattedUrl = formatUrl(originalUrl);
 
-    const requestBody: any = {
+    const requestBody: Record<string, string> = {
       originalUrl: formattedUrl
     };
 
@@ -113,10 +115,10 @@ useEffect(() => {
     }
 
     try {
-      const response = await api.post<{ shortUrl: string }>('/urls', requestBody);
+      const response = await api.post<{ shortUrl?: string; shortCode?: string }>('/urls', requestBody);
 
-      const backendShortUrl = response.data.shortUrl.toString();
-      const code = backendShortUrl.split('/').pop() || '';
+      const rawShort = response.data.shortUrl || response.data.shortCode || '';
+      const code = rawShort.split('/').pop() || '';
 
       const elegantShortUrl = `${window.location.origin}/${code}`;
       setShortUrl(elegantShortUrl);
@@ -125,7 +127,7 @@ useEffect(() => {
         const exists = prev.some(item => item.code === code);
         if (exists) return prev;
         const newHistory = [{ original: formattedUrl, short: elegantShortUrl, code }, ...prev];
-        localStorage.setItem('url_history', JSON.stringify(newHistory)); // Salva no localStorage atualizado
+        localStorage.setItem('url_history', JSON.stringify(newHistory));
         return newHistory;
       });
 
@@ -133,7 +135,7 @@ useEffect(() => {
       setCustomAlias('');
     } catch (err: any) {
       console.error(err);
-      
+
       if (err.response && err.response.data && err.response.data.message) {
         setError(err.response.data.message);
       } else {
@@ -158,13 +160,17 @@ useEffect(() => {
     setLoadingStats(true);
     try {
       const response = await api.get<any>(`/urls/analytics/${code}`);
-      
+      const data = response.data;
+
+      // Suporta propriedades 'totalClicks' ou 'clicks' vindas da API
+      const clicks = data.totalClicks !== undefined ? data.totalClicks : (data.clicks !== undefined ? data.clicks : 0);
+
       setStats({
         code,
-        original,
-        totalClicks: response.data.totalClicks,
-        devices: response.data.devices || [],
-        referrers: response.data.referrers || []
+        original: data.originalUrl || original,
+        totalClicks: clicks,
+        devices: data.devices || [],
+        referrers: data.referrers || []
       });
     } catch (err) {
       console.error(err);
@@ -180,13 +186,13 @@ useEffect(() => {
 
     try {
       await api.delete(`/urls/${code}`);
-      
+
       setHistory(prev => {
         const newHistory = prev.filter(item => item.short !== shortToDelete);
-        localStorage.setItem('url_history', JSON.stringify(newHistory)); // Atualiza o localStorage
+        localStorage.setItem('url_history', JSON.stringify(newHistory));
         return newHistory;
       });
-      
+
       if (stats && stats.code === code) {
         setStats(null);
       }
@@ -213,13 +219,13 @@ useEffect(() => {
 
   const getDevicePercentage = (type: string): number => {
     if (!stats || stats.totalClicks === 0) return 0;
-    const found = stats.devices.find(d => d.type === type);
+    const found = stats.devices.find(d => d.type.toLowerCase() === type.toLowerCase());
     return found ? Math.round((found.count / stats.totalClicks) * 100) : 0;
   };
 
   const getReferrerPercentage = (source: string): number => {
     if (!stats || stats.totalClicks === 0) return 0;
-    const found = stats.referrers.find(r => r.source === source);
+    const found = stats.referrers.find(r => r.source.toLowerCase() === source.toLowerCase());
     return found ? Math.round((found.count / stats.totalClicks) * 100) : 0;
   };
 
@@ -243,7 +249,6 @@ useEffect(() => {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between font-sans">
-      {/* Header */}
       <header className="border-b border-slate-900 bg-slate-950/70 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -257,10 +262,7 @@ useEffect(() => {
         </div>
       </header>
 
-      {/* Conteúdo Principal */}
       <main className="max-w-6xl w-full mx-auto px-6 py-12 flex-grow grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Coluna da Esquerda */}
         <div className="lg:col-span-2 space-y-10">
           <div className="space-y-4">
             <h2 className="text-4xl font-bold tracking-tight">
@@ -271,11 +273,8 @@ useEffect(() => {
             </p>
           </div>
 
-          {/* Form Avançado com Custom Alias */}
           <div className="bg-slate-900/40 border border-slate-900 p-4 rounded-2xl space-y-4">
             <form onSubmit={handleShorten} className="space-y-4">
-              
-              {/* Input de URL Principal */}
               <div className="relative flex items-center bg-slate-950 border border-slate-800 rounded-xl overflow-hidden focus-within:border-indigo-500/50 transition-all">
                 <Globe className="absolute left-4 h-5 w-5 text-slate-500" />
                 <input
@@ -289,7 +288,6 @@ useEffect(() => {
                 />
               </div>
 
-              {/* Input Secundário: Custom Alias (Opcional) */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className="md:col-span-2 relative flex items-center bg-slate-950 border border-slate-800 rounded-xl overflow-hidden focus-within:border-indigo-500/50 transition-all">
                   <Edit3 className="absolute left-4 h-4 w-4 text-slate-500" />
@@ -315,16 +313,15 @@ useEffect(() => {
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
-
             </form>
           </div>
+
           {error && (
             <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs px-4 py-2.5 rounded-xl font-medium animate-pulse">
               ⚠️ {error}
             </div>
           )}
 
-          {/* Card de Resultado */}
           {shortUrl && (
             <div className="bg-gradient-to-r from-indigo-950/40 to-violet-950/40 border border-indigo-500/30 rounded-2xl p-6 space-y-4">
               <div className="flex items-center justify-between">
@@ -359,12 +356,11 @@ useEffect(() => {
             </div>
           )}
 
-          {/* Histórico */}
           <div className="space-y-4">
             <h3 className="text-lg font-bold text-slate-200 border-b border-slate-900 pb-2">
               Links Criados
             </h3>
-            
+
             {history.length === 0 ? (
               <p className="text-slate-600 text-sm">Nenhum link criado ainda.</p>
             ) : (
@@ -416,7 +412,6 @@ useEffect(() => {
           </div>
         </div>
 
-        {/* Coluna da Direita (Painel Analítico) */}
         <div className="lg:col-span-1">
           <div className="bg-slate-900/30 border border-slate-900 p-6 rounded-2xl sticky top-24 space-y-6">
             <h3 className="text-lg font-bold text-slate-200 border-b border-slate-900 pb-3 flex items-center gap-2">
@@ -433,23 +428,22 @@ useEffect(() => {
                     {stats.code}
                   </span>
                 </div>
-                
+
                 <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center">
                   <span className="text-4xl font-bold text-white block">{stats.totalClicks}</span>
                   <span className="text-[10px] text-slate-500 font-bold">CLIQUES REAIS</span>
                 </div>
 
-                {/* Gráficos Reais de Origem de Tráfego */}
                 <div className="space-y-3 pt-2 border-t border-slate-900">
                   <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold block">Origem do Tráfego</span>
-                  
-                  {stats.totalClicks === 0 ? (
+
+                  {stats.referrers.length === 0 ? (
                     <p className="text-xs text-slate-500">Sem acessos de referência registrados ainda.</p>
                   ) : (
                     <div className="space-y-2.5 text-xs">
                       {["WhatsApp / Direct", "Instagram", "TikTok", "Facebook", "Twitter/X", "Outros"].map(source => {
                         const pct = getReferrerPercentage(source);
-                        if (pct === 0) return null; 
+                        if (pct === 0) return null;
                         return (
                           <div key={source}>
                             <div className="flex justify-between text-slate-400 mb-1">
@@ -466,7 +460,6 @@ useEffect(() => {
                   )}
                 </div>
 
-                {/* Gráficos Reais de Dispositivos */}
                 <div className="pt-4 border-t border-slate-900 space-y-2">
                   <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold block">Dispositivos</span>
                   <div className="flex justify-between items-center text-xs text-slate-400">
@@ -493,7 +486,6 @@ useEffect(() => {
         </div>
       </main>
 
-      {/* Modal do QR Code */}
       {showQrModal && (
         <div className="fixed inset-0 bg-black/85 flex items-center justify-center z-50 p-4">
           <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-xs w-full text-center space-y-6">

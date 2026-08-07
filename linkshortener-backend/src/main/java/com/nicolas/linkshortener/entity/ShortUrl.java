@@ -23,7 +23,7 @@ public class ShortUrl implements Serializable {
     @GeneratedValue
     private UUID id;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String originalUrl;
 
     @Column(nullable = false, unique = true)
@@ -33,4 +33,21 @@ public class ShortUrl implements Serializable {
 
     @CreationTimestamp
     private LocalDateTime createdAt;
+
+    @PrePersist
+    public void prePersist() {
+        if (this.shortCode == null || this.shortCode.trim().isEmpty()) {
+            this.shortCode = generateRandomCode();
+        } else {
+            this.shortCode = this.shortCode.trim();
+        }
+
+        if (this.clicks == null) {
+            this.clicks = 0L;
+        }
+    }
+
+    private String generateRandomCode() {
+        return UUID.randomUUID().toString().substring(0, 6);
+    }
 }

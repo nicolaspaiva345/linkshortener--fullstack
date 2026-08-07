@@ -1,24 +1,27 @@
 package com.nicolas.linkshortener.controller;
 
 import com.nicolas.linkshortener.dto.CreateShortUrlRequest;
+import com.nicolas.linkshortener.dto.ErrorResponse;
 import com.nicolas.linkshortener.dto.ShortUrlResponse;
 import com.nicolas.linkshortener.dto.UrlStatsResponse;
-import com.nicolas.linkshortener.entity.ShortUrl;
 import com.nicolas.linkshortener.entity.LinkAnalytics;
+import com.nicolas.linkshortener.entity.ShortUrl;
 import com.nicolas.linkshortener.repository.LinkAnalyticsRepository;
 import com.nicolas.linkshortener.service.ShortUrlService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
-import java.time.LocalDateTime;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/urls")
-@CrossOrigin(origins = "http://localhost:5173", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.DELETE, RequestMethod.OPTIONS})
+
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:3000", "https://*.vercel.app"},
+        methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.DELETE, RequestMethod.OPTIONS})
 public class ShortUrlController {
 
     private final ShortUrlService service;
@@ -32,11 +35,18 @@ public class ShortUrlController {
     @PostMapping
     public ResponseEntity<Object> create(@Valid @RequestBody CreateShortUrlRequest request) {
         try {
-            ShortUrl created = service.shortenUrl(request.originalUrl(), request.customAlias());
+            String customAlias = request.customAlias();
+            if (customAlias != null && customAlias.trim().isEmpty()) {
+                customAlias = null;
+            }
+
+            ShortUrl created = service.shortenUrl(request.originalUrl(), customAlias);
+
             String shortUrl = "http://localhost:8080/api/urls/" + created.getShortCode();
             return ResponseEntity.ok(new ShortUrlResponse(shortUrl));
+
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(new com.nicolas.linkshortener.dto.ErrorResponse(
+            return ResponseEntity.badRequest().body(new ErrorResponse(
                     e.getMessage(),
                     400,
                     LocalDateTime.now()
@@ -66,8 +76,6 @@ public class ShortUrlController {
                         System.err.println("Erro ao salvar métricas: " + e.getMessage());
                     }
 
-                    // CORREÇÃO 1: Retornando um JSON (200 OK) em vez de 302 Redirect.
-                    // Isso permite que o React pegue a URL e faça o redirecionamento com a tela de "Link Seguro"
                     Map<String, String> response = new HashMap<>();
                     response.put("originalUrl", url.getOriginalUrl());
                     return ResponseEntity.ok((Object) response);
